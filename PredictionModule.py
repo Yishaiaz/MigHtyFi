@@ -8,6 +8,7 @@ from keras.preprocessing import sequence
 
 
 class PredictionModule:
+    
     pass
 
 
