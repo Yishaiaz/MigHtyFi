@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
+from PIL import Image, ImageTk
 from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import column
 import librosa
@@ -10,15 +11,15 @@ import librosa
 from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 
 LARGE_FONT = ("Verdana", 20)
+FRAMESIZE = "1500x1000"
 
 STYLEFILESFOLDER = "StyleFiles"
-
 
 class MainApplication(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry("500x500")
+        self.geometry(FRAMESIZE)
         self.iconbitmap('{0}/equalizer1.ico'.format(STYLEFILESFOLDER))
 
         tk.Tk.iconbitmap(self)
@@ -50,6 +51,12 @@ class EntryPage(tk.Frame):
         self.controller = controller
         label = ttk.Label(self, text="Welcome To MigHtYFi!", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
+
+        main_photo = Image.open("{0}/dan&yaniv.jpeg".format(STYLEFILESFOLDER))
+        main_photo = ImageTk.PhotoImage(main_photo)
+        photo_label = ttk.Label(self, image=main_photo)
+        label.image = main_photo
+        photo_label.pack()
         button_to_home_page = ttk.Button(self, text="Go To Song Analyzer", command=lambda: self.controller.show_frame(SongAnalyserPage))
         button_to_home_page.pack()
 
@@ -92,6 +99,7 @@ class SongAnalyserPage(tk.Frame):
 
 
 class PageOne(tk.Frame):
+
     def get_song_name(self, entry):
         # todo: here activate the crawler.
         print("hello {0}".format(self.content.get()))
