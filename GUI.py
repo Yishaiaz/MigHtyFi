@@ -12,8 +12,9 @@ from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 
 LARGE_FONT = ("Verdana", 20)
 FRAMESIZE = "1500x1000"
-
 STYLEFILESFOLDER = "StyleFiles"
+
+
 
 class MainApplication(tk.Tk):
 
