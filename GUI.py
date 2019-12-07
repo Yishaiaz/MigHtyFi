@@ -1,5 +1,12 @@
+import os
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
+from tkinter.filedialog import askopenfilename
+from bokeh.plotting import figure, output_file, show
+from bokeh.layouts import column
+import librosa
+
+from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 
 LARGE_FONT = ("Verdana", 12)
 
@@ -11,7 +18,6 @@ class MainApplication(tk.Tk):
 
         tk.Tk.iconbitmap(self)
         tk.Tk.wm_title(self, "MigHtyFi")
-
         container = ttk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -33,14 +39,32 @@ class MainApplication(tk.Tk):
 
 class HomePage(tk.Frame):
 
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+    def open_file_clicked(self):
+        name = askopenfilename(initialdir="C:/Users/Batman/Documents/Programming/tkinter/",
+                               filetypes=(("m4a file", "*.m4a"), ("mp3 file", "*.mp3"), ("All Files", "*.*")),
+                               title="Choose a file."
+                               )
+        self.file_path = name
 
+        print(name)
+        # Using try in case user types in unknown file or closes without choosing a file.
+
+    def analyse_song_clicked(self):
+        file_analyse = fsa(self.file_path)
+        file_analyse.plot_all()
+
+    def __init__(self, parent, controller):
+        self.parent = parent
+        self.file_path = ""
+
+        tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Start Page", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button = ttk.Button(self, text="Visit Page 1",
-                            command=lambda: controller.show_frame(PageOne))
+        ttk.Button(parent, text="Open files", command=self.open_file_clicked).grid(row=1, column=0, padx=4, pady=4, sticky='ew')
+
+        button = ttk.Button(self, text="Analyze File",
+                            command=self.analyse_song_clicked)
         button.pack()
 
         button2 = ttk.Button(self, text="Visit Page 2",
