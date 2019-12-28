@@ -8,11 +8,13 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import AudioFeatureExtractor
+from PredictionModule import DataPreprocessor, PredictionModule
 from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 
 LARGE_FONT = ("Verdana", 20)
 FRAMESIZE = "850x500"
 STYLEFILESFOLDER = "StyleFiles"
+
 
 class MainApplication(tk.Tk):
 
@@ -60,8 +62,9 @@ class EntryPage(tk.Frame):
         button_to_home_page = ttk.Button(self, text="Go To Song Analyzer", command=lambda: self.controller.show_frame(SongAnalyserPage))
         button_to_home_page.grid(row=3, column=1)
         button_to_about_page = ttk.Button(self, text="About",
-                                         command=lambda: self.controller.show_frame(AboutPage))
+                                          command=lambda: self.controller.show_frame(AboutPage))
         button_to_about_page.grid(row=3, column=0)
+
         # button_to_home_page = ttk.Button(self, text="About",
         #                                  command=lambda: self.controller.show_frame(SongAnalyserPage))
         # button_to_home_page.grid(row=3, column=0)
@@ -73,8 +76,11 @@ class SongAnalyserPage(tk.Frame):
         tk.Frame.__init__(self, parent, bg="#211F1E")
         self.parent = parent
         self.file_path = ""
-        label = ttk.Label(self, text="Start Page", font=LARGE_FONT)
+        self.file_path_to_trained_model = ""
+        self.pred_model = None
+        self.data_processor = DataPreprocessor()
 
+        label = ttk.Label(self, text="Start Page", font=LARGE_FONT)
         label.grid(row=0, column=0, columnspan=3)
 
         # main photo
@@ -87,6 +93,9 @@ class SongAnalyserPage(tk.Frame):
         self.lyrics_text = tk.Text(self, width=20, height=20)
         self.lyrics_text.insert('1.0', "Song Lyrics:\n")
         self.lyrics_text.grid(row=1, column=2, columnspan=1)
+        # load model button
+        button_to_open_files = ttk.Button(self, text="Load Model", command=self.load_model_clicked)
+        button_to_open_files.grid(row=2, column=3)
 
         button_to_open_files = ttk.Button(self, text="Open files", command=self.open_file_clicked)
 
@@ -106,17 +115,25 @@ class SongAnalyserPage(tk.Frame):
                                )
         self.file_path = name
 
+    def load_model_clicked(self):
+        name = askopenfilename(initialdir="C:/Users/Batman/Documents/Programming/tkinter/",
+                               filetypes=(("SAV file", "*.sav"), ("All Files", "*")),
+                               title="Choose a file.")
+        self.file_path_to_trained_model = name
+
     def analyse_song_clicked(self):
         if self.file_path == "":
             messagebox.showinfo("ERROR!", "no file was selected!")
             return
         # file_analyse = fsa(self.file_path)
         # file_analyse.plot_all()
-        afe = AudioFeatureExtractor.SingleAudioFeatureExtractor(self.file_path)
-        print(afe.extract_features())
-        print(afe.get_features_labels())
-        df = pd.DataFrame(data=afe.get_feature_dict(), index=[self.file_path])
+        # afe = AudioFeatureExtractor.SingleAudioFeatureExtractor(self.file_path)
+        # print(afe.extract_features())
+        # print(afe.get_features_labels())
+        # df = pd.DataFrame(data=afe.get_feature_dict(), index=[self.file_path])
+        self.pred_model = PredictionModule(trained_already=self.file_path_to_trained_model)
         self.lyrics_text.insert(tk.END, "again")
+
         messagebox.showinfo("Thank you", "Your song {0} is analysed\nA browser window will be open with the results".format(self.file_path[:-4]))
 
 
