@@ -40,6 +40,7 @@ notebook==6.0.2
 numba==0.46.0
 numpy==1.17.4
 packaging==19.2
+pandas==0.25.3
 pandocfilters==1.4.2
 parso==0.5.1
 pexpect==4.7.0
@@ -52,9 +53,11 @@ pybedtools==0.8.0
 pycparser==2.19
 Pygments==2.5.2
 pyparsing==2.4.5
+PyQt5-sip==12.7.0
 pyrsistent==0.15.6
 pysam==0.15.3
 python-dateutil==2.8.1
+pytz==2019.3
 PyYAML==5.1.2
 pyzmq==18.1.1
 qtconsole==4.6.0
