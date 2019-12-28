@@ -1,11 +1,13 @@
 import os
+import pandas as pd
 import tkinter as tk
 from time import sleep
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 from PIL import Image, ImageTk
-
+import matplotlib.pyplot as plt
+import AudioFeatureExtractor
 from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 
 LARGE_FONT = ("Verdana", 20)
@@ -103,9 +105,12 @@ class SongAnalyserPage(tk.Frame):
         if self.file_path == "":
             messagebox.showinfo("ERROR!", "no file was selected!")
             return
-        file_analyse = fsa(self.file_path)
-        file_analyse.plot_all()
-
+        # file_analyse = fsa(self.file_path)
+        # file_analyse.plot_all()
+        afe = AudioFeatureExtractor.SingleAudioFeatureExtractor(self.file_path)
+        print(afe.extract_features())
+        print(afe.get_features_labels())
+        df = pd.DataFrame(data=afe.get_feature_dict(), index=[self.file_path])
         messagebox.showinfo("Thank you", "Your song {0} is analysed\nA browser window will be open with the results".format(self.file_path[:-4]))
 
 
@@ -138,19 +143,18 @@ class AboutPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent, bg="#363332")
         label = ttk.Label(self, text="About Page", font=LARGE_FONT)
-        label.grid(row=0, column=2)
+        label.grid(row=0, column=0)
 
-        label_about_us = ttk.Label(self,
-                                   text=open("{0}/aboutmightyfi.txt"
-                                             .format(STYLEFILESFOLDER)).read())
-        label_about_us.grid(row=1, columnspan=3)
+        label_about_us = tk.Text(self, width=100, height=20)
+        label_about_us.insert('1.0', open("{0}/aboutmightyfi.txt".format(STYLEFILESFOLDER)).read())
+        label_about_us.grid(row=1, column=0, columnspan=3)
         button1 = ttk.Button(self, text="Back to Home",
                              command=lambda: controller.show_frame(EntryPage))
         button1.grid(row=2, column=1)
 
         button2 = ttk.Button(self, text="To Our Song Analyzer",
                              command=lambda: controller.show_frame(SongAnalyserPage))
-        button2.grid(row=3, column=1)
+        button2.grid(row=2, column=2)
 
 # style = ttk.Style()
 # style.map("C.TButton",
