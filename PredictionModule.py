@@ -1,15 +1,29 @@
 import numpy as np
 import pandas as pd
+import pickle
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 import sklearn.model_selection as model_selection
 
 
 class PredictionModule:
+    """
+    wraps DNN's and other regression modules
+
+
+        other regressors you can use
+        sklearn.neighbors.KNeighborsRegressor(n_neighbors=5, weights='uniform', algorithm='auto', leaf_size=30, p=2, metric='minkowski', metric_params=None, n_jobs=None,
+    """
     def __init__(self, **kwargs):
         """
         initializes the model
         :param kwargs:
+            'trained_already' - if not None, pass in the file path ('*.sav') for the serialized model. default False (to indicate not trained)
+            'model_type' - if not None, pass in the the appropriate input, default is MLPRegressor
+            'hidden_layer_sizes' - if not None, pass in the the appropriate input, default is (13,10,8)
+            'activation_func' - if not None, pass in the the appropriate input, default is 'relu'
+            'solver' - if not None, pass in the the appropriate input, default is 'adam'
+            'verbos' - if not None, pass in the the appropriate input, default is True
         """
         if kwargs.get('model_type') is not None:
             model_type = kwargs.get('model_type')
@@ -31,35 +45,52 @@ class PredictionModule:
             self.verbose = kwargs.get('verbos')
         else:
             self.verbose = True
-
-        self.was_trained = False
-        self.model = model_type(hidden_layer_sizes=self.hidden_layer_sizes, activation=self.activation_func, solver=self.solver, verbose=self.verbose)
+        if kwargs.get('trained_already') is not None:
+            trained_already = kwargs.get('trained_already')
+            # load the model from disk
+            self.model = pickle.load(open(trained_already, 'rb'))
+            self.was_trained = True
+        else:
+            self.was_trained = False
+            self.model = model_type(hidden_layer_sizes=self.hidden_layer_sizes, activation=self.activation_func, solver=self.solver, verbose=self.verbose)
 
     def fit_model(self, x_train: np.ndarray, y_train: np.ndarray):
         self.model = self.model.fit(x_train, y_train)
         params = self.model.get_params()
         self.was_trained = True
+        # save the model to disk
+        filename = 'finalized_model.sav'
+        pickle.dump(self.model, open(filename, 'wb'))
 
     def predict_model(self, X: np.ndarray, **kwargs):
         if not self.was_trained:
             raise Exception("The model wasn't trained!")
-
         results = self.model.predict(X)
 
     def get_model_score(self, X: np.ndarray, Y_true: np.ndarray):
         return self.model.score(X, Y_true)
 
 
-
-
 class DataPreprocessor:
+    """
+    a class to preprocess the data, preparing it to our
+    specific needs.
+    uses a default normalizer from the type MinMaxScaler,
+    if you want a diffrenet scaler pass it (already initialized) in
+    the constructor as an argument (see docs)
+    """
 
     def __init__(self, **kwargs):
+        """
+        kwargs:
+        'normalization_model' - an initialized normalization scaler,
+        such as the MinMaxScaler from sklearn
+        :param kwargs:
+        """
         if kwargs.get('normalization_model') is not None:
             self.normalization_model = kwargs.get('normalization_model')
         else:
             self.normalization_model = MinMaxScaler(feature_range=(-1, 1))
-        pass
 
     def pre_proceesing_regression(self, data_frame: pd.DataFrame, **kwargs):
         """

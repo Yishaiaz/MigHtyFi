@@ -11,7 +11,7 @@ import AudioFeatureExtractor
 from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 
 LARGE_FONT = ("Verdana", 20)
-FRAMESIZE = "700x500"
+FRAMESIZE = "850x500"
 STYLEFILESFOLDER = "StyleFiles"
 
 class MainApplication(tk.Tk):
@@ -77,11 +77,16 @@ class SongAnalyserPage(tk.Frame):
 
         label.grid(row=0, column=0, columnspan=3)
 
+        # main photo
         main_photo = Image.open("{0}/spectrum_image.png".format(STYLEFILESFOLDER))
         main_photo = ImageTk.PhotoImage(main_photo)
         photo_label = ttk.Label(self, image=main_photo)
         label.image = main_photo
-        photo_label.grid(row=1, column=0, columnspan=3)
+        photo_label.grid(row=1, column=0, columnspan=2)
+        # lyrics text box
+        self.lyrics_text = tk.Text(self, width=20, height=20)
+        self.lyrics_text.insert('1.0', "Song Lyrics:\n")
+        self.lyrics_text.grid(row=1, column=2, columnspan=1)
 
         button_to_open_files = ttk.Button(self, text="Open files", command=self.open_file_clicked)
 
@@ -90,7 +95,7 @@ class SongAnalyserPage(tk.Frame):
         button_to_analyze_file = ttk.Button(self, text="Analyze File", command=self.analyse_song_clicked)
         button_to_analyze_file.grid(row=2, column=0)
 
-        button2 = ttk.Button(self, text="Back",
+        button2 = ttk.Button(self, text="Home Page",
                              command=lambda: controller.show_frame(EntryPage))
         button2.grid(row=2, column=2)
 
@@ -111,7 +116,27 @@ class SongAnalyserPage(tk.Frame):
         print(afe.extract_features())
         print(afe.get_features_labels())
         df = pd.DataFrame(data=afe.get_feature_dict(), index=[self.file_path])
+        self.lyrics_text.insert(tk.END, "again")
         messagebox.showinfo("Thank you", "Your song {0} is analysed\nA browser window will be open with the results".format(self.file_path[:-4]))
+
+
+class AboutPage(tk.Frame):
+
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent, bg="#363332")
+        label = ttk.Label(self, text="About Page", font=LARGE_FONT)
+        label.grid(row=0, column=0)
+
+        label_about_us = tk.Text(self, width=100, height=20)
+        label_about_us.insert('1.0', open("{0}/aboutmightyfi.txt".format(STYLEFILESFOLDER)).read())
+        label_about_us.grid(row=1, column=0, columnspan=3)
+        button1 = ttk.Button(self, text="Home Page",
+                             command=lambda: controller.show_frame(EntryPage))
+        button1.grid(row=2, column=1)
+
+        button2 = ttk.Button(self, text="To Our Song Analyzer",
+                             command=lambda: controller.show_frame(SongAnalyserPage))
+        button2.grid(row=2, column=2)
 
 
 class PageOne(tk.Frame):
@@ -133,33 +158,18 @@ class PageOne(tk.Frame):
         button1.bind("<Button-1>", self.get_song_name)
         button1.pack()
 
-        button2 = ttk.Button(self, text="Back Home",
+        button2 = ttk.Button(self, text="Home Page",
                              command=lambda: controller.show_frame(EntryPage))
         button2.pack()
 
 
-class AboutPage(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, bg="#363332")
-        label = ttk.Label(self, text="About Page", font=LARGE_FONT)
-        label.grid(row=0, column=0)
-
-        label_about_us = tk.Text(self, width=100, height=20)
-        label_about_us.insert('1.0', open("{0}/aboutmightyfi.txt".format(STYLEFILESFOLDER)).read())
-        label_about_us.grid(row=1, column=0, columnspan=3)
-        button1 = ttk.Button(self, text="Back to Home",
-                             command=lambda: controller.show_frame(EntryPage))
-        button1.grid(row=2, column=1)
-
-        button2 = ttk.Button(self, text="To Our Song Analyzer",
-                             command=lambda: controller.show_frame(SongAnalyserPage))
-        button2.grid(row=2, column=2)
 
 # style = ttk.Style()
 # style.map("C.TButton",
 #     foreground=[('pressed', 'red'), ('active', 'blue')],
 #     background=[('pressed', '!disabled', 'black'), ('active', 'white')]
 #     )
+
+
 app = MainApplication()
 app.mainloop()
