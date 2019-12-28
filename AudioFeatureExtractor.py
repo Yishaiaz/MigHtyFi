@@ -237,6 +237,7 @@ def test_multi_audio():
     afe = AudioFeatureExtractor(temp_dir_path)
     df = afe.extract_features()
     print(df)
+    print(afe)
 
 
 def test_single_audio():
