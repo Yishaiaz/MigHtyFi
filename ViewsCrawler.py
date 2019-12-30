@@ -1,9 +1,7 @@
 import urllib.request
 import urllib.parse
 import urllib.error
-from bs4 import BeautifulSoup
 import ssl
-import json
 import os
 from urllib.request import Request, urlopen
 import urllib.request
@@ -21,13 +19,12 @@ class ViewsCrawler:
 
     def __init__(self):
         self.songsCompleted = 0;
-        self.errorCount = 0
 
     def getSongData(self,songName):
 
         try:
             '''
-            :param songName: the query for youtube to search
+            :param songName: the query for youtube to search (updated to song and artist)
             :return: a jason object with the songs youtube data
             '''
             query_string = urllib.parse.urlencode({"search_query" : songName})
@@ -85,7 +82,6 @@ class ViewsCrawler:
 
     def processDirectory(self,directoryPath,jsonFile, verify=True):
         self.songsCompleted = 0;
-        self.errorCount = 0
         '''
 
         :param directoryPath: the path of the directory to iterate over
@@ -149,6 +145,7 @@ class ViewsCrawler:
     def addSongData(self,songName, dictionary,error,fileName,no_lyrics):
         '''
         the functions gets the song data from youtube (views) and get the songs lyrics and text features, then adds it to the given dictionary(json file).
+        the process is cached in the json file -> if you the song was allready processed and the lyrics where found, it will skip the song
         :param songName: song name
         :param dictionary: a valid json object
         :param error: list of files no youtub match found
@@ -161,17 +158,11 @@ class ViewsCrawler:
         if fileName not in dictionary:
             query = songName + " " + artist
             info = self.getSongData(query)
-
-            if not info:
-                error[songName] = "no data"
-                self.errorCount = self.errorCount + 1;
-
             #   add song data to dictionary
             dictionary[fileName] = info
-            print(songName,fileName)
             dictionary[fileName]['song_name'] = songName
 
-        # get lyrics and fetures
+        # get lyrics and fetures if they do not exist
         if 'lyrics' not in dictionary[fileName]:
 
             try:
@@ -253,9 +244,9 @@ class ViewsCrawler:
         try:
             lyrics = PyLyrics.getLyrics(artist, songName)
             return lyrics
-        except:
+        except: #try again with lower case
             try:
                 lyrics = PyLyrics.getLyrics(artist.lower(), songName.lower())
                 return lyrics
-            except:
+            except: # not found -> return null
                 return None

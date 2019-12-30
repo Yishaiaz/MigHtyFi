@@ -37,7 +37,7 @@ class CrawlerTool:
         print("******************************************************************************\nworking on -->" + dataFile)
         print('retrieving data from youtube:')
         self.vc.processDirectory(directory, dataFile, False)
-        print("\nCreating SCV file: " + dataFile ,end='')
+        print("\nCreating SCV file: " + dataFile, end='')
         self.jsonToCSV(dataFile)
         print(' ----> Done!')
 
@@ -111,4 +111,5 @@ class CrawlerTool:
 
 
 crawlerTool = CrawlerTool()
-print(crawlerTool.processSingleSong('let it be', 'the beatles'))
+# crawlerTool.processSingleDirectory('/Users/yanivleedon/Desktop/university/adir/Archive/Archive/test')
+print(crawlerTool.processSingleSong('Perfect','Ed Sheeran'))
