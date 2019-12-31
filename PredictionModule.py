@@ -4,6 +4,22 @@ import pickle
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 import sklearn.model_selection as model_selection
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+
+class KnearNeighborsPrediction:
+    def __init__(self, **kwargs):
+        if kwargs.get('n_neighbors') is not None:
+            self.n_neighbors = kwargs.get('n_neighbors')
+        else:
+            self.n_neighbors = None
+        self.classifier = KNeighborsClassifier(n_neighbors=self.n_neighbors)
+
+    def train(self, X_train, y_train):
+        self.classifier.fit(X_train, y_train)
+
+    def predict(self, X_test):
+        self.classifier.predict(X_test)
 
 
 class PredictionModule:
@@ -29,10 +45,14 @@ class PredictionModule:
             model_type = kwargs.get('model_type')
         else:
             model_type = MLPRegressor
+        if kwargs.get('max_iter') is not None:
+            self.max_iter = kwargs.get('max_iter')
+        else:
+            self.max_iter = 50000
         if kwargs.get('hidden_layer_sizes') is not None:
             self.hidden_layer_sizes = kwargs.get('hidden_layer_sizes')
         else:
-            self.hidden_layer_sizes = (13, 10, 8)
+            self.hidden_layer_sizes = (4, 2, 4)
         if kwargs.get('activation_func') is not None:
             self.activation_func = kwargs.get('activation_func')
         else:
@@ -52,7 +72,7 @@ class PredictionModule:
             self.was_trained = True
         else:
             self.was_trained = False
-            self.model = model_type(hidden_layer_sizes=self.hidden_layer_sizes, activation=self.activation_func, solver=self.solver, verbose=self.verbose)
+            self.model = model_type(hidden_layer_sizes=self.hidden_layer_sizes, activation=self.activation_func, solver=self.solver, verbose=self.verbose, max_iter=self.max_iter, tol=0.001)
 
     def fit_model(self, x_train: np.ndarray, y_train: np.ndarray):
         self.model = self.model.fit(x_train, y_train)
@@ -65,7 +85,7 @@ class PredictionModule:
     def predict_model(self, X: np.ndarray, **kwargs):
         if not self.was_trained:
             raise Exception("The model wasn't trained!")
-        results = self.model.predict(X)
+        return self.model.predict(X)
 
     def get_model_score(self, X: np.ndarray, Y_true: np.ndarray):
         return self.model.score(X, Y_true)
@@ -90,7 +110,7 @@ class DataPreprocessor:
         if kwargs.get('normalization_model') is not None:
             self.normalization_model = kwargs.get('normalization_model')
         else:
-            self.normalization_model = MinMaxScaler(feature_range=(-1, 1))
+            self.normalization_model = MinMaxScaler(feature_range=(-1000, 1000))
 
     def pre_proceesing_regression(self, data_frame: pd.DataFrame, **kwargs):
         """
@@ -111,10 +131,10 @@ class DataPreprocessor:
             random_state = kwargs.get('random_state')
         else:
             random_state = 42
-
+        data_frame.fillna(data_frame.median(), inplace=True)
         X = data_frame.iloc[:, 1:-1].values
         y = data_frame.iloc[:, -1].values
-        data = self.normalization_model.fit_transform(X, y)
+        data = self.normalization_model.fit_transform(X)
         X_train, X_test, y_train, y_test = model_selection.train_test_split(data, y,
                                                                             test_size=test_size,
                                                                             random_state=random_state,
@@ -122,10 +142,23 @@ class DataPreprocessor:
         return X_train, X_test, y_train, y_test
 
 
+# class KnnDataProcessor():
+
 # Example for Data Processor
-# dp = DataPreprocessor()
+dp = DataPreprocessor()
+pm = PredictionModule()
+
 #
-# PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/data_2015.csv"
+PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/ExtractedData/data_no_name.csv"
 #
-# data_frame = pd.read_csv(PATH_TO_FILE)
-# print(dp.pre_proceesing_regression(data_frame))
+data_frame = pd.read_csv(PATH_TO_FILE)
+data_frame.fillna(data_frame.median(), inplace=True)
+bins = [0, 100000, 500000,1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
+labels = [x for x in bins][:-1]
+X = data_frame.iloc[:, 1:-1].values
+y = pd.cut(data_frame.iloc[:, 5], bins, labels=labels)
+# X_train, X_test, y_train, y_test = dp.pre_proceesing_regression()
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+pm.fit_model(X_train, y_train)
+prediction_vector = pm.predict_model(X_test)
+print(prediction_vector[prediction_vector==y_test])
