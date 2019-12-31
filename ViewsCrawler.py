@@ -1,14 +1,13 @@
-import threading
 import urllib.request
 import urllib.parse
 import urllib.error
-from bs4 import BeautifulSoup
 import ssl
-import json
 import os
 from urllib.request import Request, urlopen
 import urllib.request
 import re
+from PyLyrics import *
+from textFeatureExtraction import TextFeatureExtractor
 
 
 class ViewsCrawler:
@@ -20,13 +19,12 @@ class ViewsCrawler:
 
     def __init__(self):
         self.songsCompleted = 0;
-        self.errorCount = 0
 
     def getSongData(self,songName):
 
         try:
             '''
-            :param songName: the name of the song to search
+            :param songName: the query for youtube to search (updated to song and artist)
             :return: a jason object with the songs youtube data
             '''
             query_string = urllib.parse.urlencode({"search_query" : songName})
@@ -83,6 +81,7 @@ class ViewsCrawler:
             else: print("song is null!!!!!!!!!!!!!!!")
 
     def processDirectory(self,directoryPath,jsonFile, verify=True):
+        self.songsCompleted = 0;
         '''
 
         :param directoryPath: the path of the directory to iterate over
@@ -92,8 +91,8 @@ class ViewsCrawler:
         '''
 
         self.total_songs = len(os.listdir(directoryPath))
-        threads = list()
         error = {}
+        no_lyrics = {}
         print("Total number of files: " + str(self.total_songs))
 
         # check if json file exists, if not, creates the file
@@ -117,100 +116,67 @@ class ViewsCrawler:
                 if not songName:
                     print(filename + " is null!!!")
                     continue
-                self.addSongData(songName,data,error, filename)
-        #         # create new Thread to activate a crawler to get song data from YouTube
-        #         thread = threading.Thread(target=self.addSongData, args=(songName,data,error))
-        #         threads.append(thread)
-        #         thread.start()
-        #
-        # # save the JSON file
-        # for index, thread in enumerate(threads):
-        #     thread.join()
-        with open(jsonFile, 'w', encoding='utf8') as outfile:
-            json.dump(data, outfile, ensure_ascii=False, indent=4)
+
+                self.addSongData(songName,data,error, filename,no_lyrics)
+                with open(jsonFile, 'w', encoding='utf8') as outfile:
+                    json.dump(data, outfile, ensure_ascii=False, indent=4)
 
         if (len(error) > 0):
-            print("\n\nNo Lyrics Found For(" + str(self.errorCount) + "):\n" + str(error))
+            print("\n\nerror in(" + str(len(error)) + "):\n" + str(error))
+        if (len(no_lyrics) > 0):
+            print("\n\nno lyrics for(" + str(len(no_lyrics)) + "):\n" + str(no_lyrics))
         # verify the data
         if verify:
             print("\n----------------------------------------------")
-            self.verifyData(directoryPath,jsonFile)
 
 
-    def verifyData(self, directoryPath, jsonFile):
+
+    def getFeatures(self,lyrics):
+
         '''
-        the function verifies that all songs in the directory have a valid "NUMBER_OF_VIEWS" (and over 10) in the JSON file
-        :param directoryPath: the path of the directory to iterate over its files
-        :param jsonFile: the json file with the data
-        :return: nothing, will print the results
+        breaks text into features
+        :param lyrics: the text to break down
+        :return: features
         '''
-
-        try:
-            print("Validating data...\n")
-            error = 0;
-            min = -1;
-            minSong = ""
-
-            # open data file
-            with open(jsonFile) as json_file:
-                data = json.load(json_file)
-
-            # iterate over all songs in directory
-            for filename in os.listdir(directoryPath):
-                songName = self.getSongName(filename)
-                try:
-                    # get number of views
-                    views_raw = data[songName]["NUMBER_OF_VIEWS"].split(" ")
-                    views = int(views_raw[0].replace(",",""))
-
-                    #   update "min views"
-                    if min == -1:
-                        min = views
-                        minSong = songName
-                    else:
-                        if views < min:
-                            min = views
-                            minSong = songName
-
-                    # indicate less than 10 views
-                    if views < 10:
-                        print("*** NOTE: The song "+ songName + " has less than 10 views (" + str(views) + ")  ***\n")
-
-                except:
-                    error += 1
-                    print("--------  Missing \"NUMBER_OF_VIEWS\" for: \"" + songName + "\"--------\n")
-
-            #   no errors found indication
-            if error == 0 :
-                print("All songs have a valid \"VIEWS\" field")
-                print("NOTE: the song with the least views is \"" + minSong + "\", views: " + str(min))
-
-        except:
-            print("something went wrong\n")
-            return
+        tfe = TextFeatureExtractor()
+        return tfe.extract(lyrics)
 
 
-
-    def addSongData(self,songName, dictionary,error,fileName):
+    def addSongData(self,songName, dictionary,error,fileName,no_lyrics):
         '''
-        the functions gets the song data from youtube and adds it to the given dictionary.
-        :param songName: the song to search for.
-        :param dictionary: a dictionary to add the data to
-        :param total_songs: the total number of songs that are being searched (for progress)
-        :return: nothing -> prints the progress %
+        the functions gets the song data from youtube (views) and get the songs lyrics and text features, then adds it to the given dictionary(json file).
+        the process is cached in the json file -> if you the song was allready processed and the lyrics where found, it will skip the song
+        :param songName: song name
+        :param dictionary: a valid json object
+        :param error: list of files no youtub match found
+        :param fileName: name of the file
+        :param no_lyrics: a list with the number of songs that no lyrics were retrieved
+        :return: adds data to the dictianary
         '''
-        #   get song data
-        # print("33333333 " + songName)
-        query = songName + " " + self.getArtist(fileName)
-        info = self.getSongData(query)
+        #   get song data from youtube
+        artist = self.getArtist(fileName)
+        if fileName not in dictionary:
+            query = songName + " " + artist
+            info = self.getSongData(query)
+            #   add song data to dictionary
+            dictionary[fileName] = info
+            dictionary[fileName]['song_name'] = songName
 
-        if not info:
-            error[songName] = "no data"
-            self.errorCount = self.errorCount + 1;
+        # get lyrics and fetures if they do not exist
+        if 'lyrics' not in dictionary[fileName]:
 
-        #   add song data to dictionary
-        dictionary[fileName] = info
-        dictionary[fileName]['song_name'] = songName
+            try:
+                lyrics = self.getLyrics(songName,artist)
+
+                if not lyrics:
+                    no_lyrics[songName+ "->" + artist] = "no Lyrics"
+                    self.errorCount = self.errorCount + 1;
+                else:
+                    dictionary[fileName]['lyrics'] = lyrics
+
+                dictionary[fileName]['features'] = self.getFeatures(lyrics)
+            except:
+                print("error lyrics:" + songName)
 
         #   update and print progress
         self.songsCompleted += 1
@@ -218,11 +184,19 @@ class ViewsCrawler:
         print("\rCompleted: " + str(percent) + "%", end='')
 
 
+
+
     def getSongName(self,filename):
+        '''
+        givan an audio file (with specific format) will retern the song name
+        :param filename: the song file name
+        :return: the name of the song
+        '''
         try:
             filename = filename.replace('–', '-')
             songName = filename.split(" - ")[1]
             songName = songName[:-4]
+            songName = songName.replace('.', '')
             if "(" in songName:
                 songName = songName[0: songName.find('(') - 1] + ".mp3"
 
@@ -233,6 +207,7 @@ class ViewsCrawler:
             if songName == "null" or songName =="":
                 print("this song ins null - " + filename)
                 return "error"
+            songName = songName.replace('[wwwmusicboltcom]', '')
             return songName
         except:
             print("Error for song name - " + filename)
@@ -240,6 +215,11 @@ class ViewsCrawler:
 
 
     def getArtist(self,filename):
+        '''
+        givan an audio file (with specific format) will retern the artists name
+        :param filename: the song file name
+        :return: the artist of the song
+        '''
         try:
             filename.replace('–', '-')
             artist =filename.split(" - ")[0]
@@ -253,3 +233,20 @@ class ViewsCrawler:
             return artist
         except:
             return "unKnowned"
+
+    def getLyrics(self,songName,artist):
+        '''
+        retreves lyrics from Genius.com API
+        :param songName: the song name
+        :param artist: the artist name
+        :return: lyrics if found, else 'None'.
+        '''
+        try:
+            lyrics = PyLyrics.getLyrics(artist, songName)
+            return lyrics
+        except: #try again with lower case
+            try:
+                lyrics = PyLyrics.getLyrics(artist.lower(), songName.lower())
+                return lyrics
+            except: # not found -> return null
+                return None
