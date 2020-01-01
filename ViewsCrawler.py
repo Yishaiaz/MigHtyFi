@@ -111,7 +111,10 @@ class ViewsCrawler:
 
             # iterate over all files in the given directory
             print("Sending crawlers...")
+
             for filename in os.listdir(directoryPath):
+                if filename == '.DS_Store':
+                    continue
                 songName = self.getSongName(filename)
                 if not songName:
                     print(filename + " is null!!!")
@@ -155,6 +158,7 @@ class ViewsCrawler:
         '''
         #   get song data from youtube
         artist = self.getArtist(fileName)
+        print("--"+songName+"-----" + artist + "--")
         if fileName not in dictionary:
             query = songName + " " + artist
             info = self.getSongData(query)
@@ -170,7 +174,6 @@ class ViewsCrawler:
 
                 if not lyrics:
                     no_lyrics[songName+ "->" + artist] = "no Lyrics"
-                    self.errorCount = self.errorCount + 1;
                 else:
                     dictionary[fileName]['lyrics'] = lyrics
 
@@ -192,19 +195,46 @@ class ViewsCrawler:
         :param filename: the song file name
         :return: the name of the song
         '''
+
+
+        # # archive1 version 1.
+        # try:
+        #     filename = filename.replace('–', '-')
+        #     songName = filename.split(" - ")[1]
+        #     songName = songName[:-4]
+        #     songName = songName.replace('.', '')
+        #     if "(" in songName:
+        #         songName = songName[0: songName.find('(') - 1] + ".mp3"
+        #
+        #         songName = songName[:-4]
+        #     if songName == None:
+        #         print("this song is None: - " + filename )
+        #         return "error"
+        #     if songName == "null" or songName =="":
+        #         print("this song ins null - " + filename)
+        #         return "error"
+        #     songName = songName.replace('[wwwmusicboltcom]', '')
+        #     return songName
+        # except:
+        #     print("Error for song name - " + filename)
+        #     return "Unknown songName"
+
+
+        # Archiv2 version 2.1 (num artist - song)
         try:
             filename = filename.replace('–', '-')
             songName = filename.split(" - ")[1]
             songName = songName[:-4]
             songName = songName.replace('.', '')
             if "(" in songName:
-                songName = songName[0: songName.find('(') - 1] + ".mp3"
+                songName = songName[0: songName.find('(') - 1]
+            if "[" in songName:
+                songName = songName[0: songName.find('[') - 1]
 
-                songName = songName[:-4]
             if songName == None:
-                print("this song is None: - " + filename )
+                print("this song is None: - " + filename)
                 return "error"
-            if songName == "null" or songName =="":
+            if songName == "null" or songName == "":
                 print("this song ins null - " + filename)
                 return "error"
             songName = songName.replace('[wwwmusicboltcom]', '')
@@ -220,16 +250,33 @@ class ViewsCrawler:
         :param filename: the song file name
         :return: the artist of the song
         '''
+
+        # # archive1 version 1.
+        # try:
+        #     filename.replace('–', '-')
+        #     artist =filename.split(" - ")[0]
+        #     artist = artist.split(".")[1]
+        #     artist = artist[1:]
+        #     if ',' in artist:
+        #         artist = artist.split(',')[0]
+        #     if ' feat' in artist:
+        #         artist = artist.split(' feat')[0]
+        #
+        #     return artist
+        # except:
+        #     return "unKnowned"
+
+        # Archiv2 version 2.1 (num artist - song)
+
         try:
-            filename.replace('–', '-')
+
+            filename = filename.replace('–', '-')
+            filename = filename.replace('–', '-')
             artist =filename.split(" - ")[0]
-            artist = artist.split(".")[1]
-            artist = artist[1:]
+            number_length = len(filename.split(" ")[0])
+            artist = artist[number_length + 1:]
             if ',' in artist:
                 artist = artist.split(',')[0]
-            if ' feat' in artist:
-                artist = artist.split(' feat')[0]
-
             return artist
         except:
             return "unKnowned"

@@ -21,10 +21,6 @@ class CrawlerTool:
             if os.path.isdir(path):
                 self.processSingleDirectory(path)
 
-
-
-
-
     def processSingleDirectory(self,directory):
         '''
         iterates over all of the songs in a directory, retrievs data from you tube and lyrics features, saves them to a
@@ -40,11 +36,6 @@ class CrawlerTool:
         print("\nCreating SCV file: " + dataFile, end='')
         self.jsonToCSV(dataFile)
         print(' ----> Done!')
-
-
-
-
-
 
     def jsonToCSV(self,jsonFile):
         '''
@@ -85,11 +76,9 @@ class CrawlerTool:
                     df = pd.DataFrame(dict)
                     # saving the dataframe
                     csv_file = jsonFile.split('.jso')[0] + '.csv'
-                    df.to_csv(csv_file)
+                    df.to_csv(csv_file,index=False)
         except:
             print("error converting json to csv")
-
-
 
     def processSingleSong(self,songName,artist):
         '''
@@ -103,13 +92,9 @@ class CrawlerTool:
             lyrics = self.vc.getLyrics(songName,artist)
             tfe = TextFeatureExtractor()
             features = tfe.extract(lyrics)
-            return {'numberOfViews' : youtube_data['NUMBER_OF_VIEWS'], 'features' : features,'youTube_title' : youtube_data['TITLE'] }
+            return {'numberOfViews' : youtube_data['NUMBER_OF_VIEWS'], 'features' : features,'youTube_title' : youtube_data['TITLE'] , 'lyrics' : lyrics}
         except:
             print("error processing song: " + songName + " " + "("+artist+")")
             return None
 
 
-
-crawlerTool = CrawlerTool()
-# crawlerTool.processSingleDirectory('/Users/yanivleedon/Desktop/university/adir/Archive/Archive/test')
-print(crawlerTool.processSingleSong('Perfect','Ed Sheeran'))
