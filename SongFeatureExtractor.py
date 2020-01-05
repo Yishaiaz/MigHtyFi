@@ -1,11 +1,19 @@
 import numpy as np
-import os
-import warnings
+# import os
+# import warnings
 from AudioFeatureExtractor import SingleAudioFeatureExtractor
 from CrawlerTool import CrawlerTool
 
 
 def song_processing(audio_file_path, song_name, artist_name):
+    """
+    Extract all features (audio and lyrics) from a given song
+    :param audio_file_path:  the file to the audio path
+    :param song_name: the name of the song (for searching the lyrics)
+    :param artist_name: the name of the artist (for searching the lyrics)
+    :return: (dict) {'features': (ndarray) 14 features, 'y': (str) the number of views for this song in youtube,
+                        'youtube_title': (str) the video title of youtube, 'lyrics': (str) the lyrics for the song
+    """
     try:
         audio_feature_extractor = SingleAudioFeatureExtractor(audio_file_path)
         if not audio_feature_extractor:
@@ -24,10 +32,10 @@ def song_processing(audio_file_path, song_name, artist_name):
         return None
 
 
-if __name__ == '__main__':
-    file_path = 'C:\\Dan\\UNI\\Jarta.Projects\\MigHtyFi\\data\\2015\\01. Mark Ronson - Uptown Funk[www.musicbolt.com].mp3'
-    song_name = 'Uptown Funk'
-    artist = 'Mark Ronson'
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        print(song_processing(file_path, song_name, artist))
+# if __name__ == '__main__':
+#     file_path = 'C:\\Dan\\UNI\\Jarta.Projects\\MigHtyFi\\data\\2015\\01. Mark Ronson - Uptown Funk[www.musicbolt.com].mp3'
+#     song_name = 'Uptown Funk'
+#     artist = 'Mark Ronson'
+#     with warnings.catch_warnings():
+#         warnings.simplefilter('ignore')
+#         print(song_processing(file_path, song_name, artist))

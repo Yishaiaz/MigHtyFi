@@ -89,10 +89,13 @@ class CrawlerTool:
         '''
         try:
             youtube_data = self.vc.getSongData(songName + " " + artist)
+            if youtube_data is None:
+                return None
             lyrics = self.vc.getLyrics(songName,artist)
             tfe = TextFeatureExtractor()
             features = tfe.extract(lyrics)
-            return {'numberOfViews' : youtube_data['NUMBER_OF_VIEWS'], 'features' : features,'youTube_title' : youtube_data['TITLE'] , 'lyrics' : lyrics}
+            return {'numberOfViews': youtube_data['NUMBER_OF_VIEWS'],
+                    'features': features, 'youTube_title': youtube_data['TITLE'], 'lyrics': lyrics}
         except:
             print("error processing song: " + songName + " " + "("+artist+")")
             return None
