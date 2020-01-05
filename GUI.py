@@ -202,7 +202,7 @@ class PageOne(tk.Frame):
 
     def browse_button(self):
         self.entry_song_path.delete(0, END)
-        self.entry_song_path.insert(0, askopenfilename(initialdir=os.path.join( os.environ['HOMEPATH'], 'Desktop'), title='Select File'))
+        self.entry_song_path.insert(0, askopenfilename(initialdir='/', title='Select File'))
 
     # def open_file_clicked(self):
     #     print('entered')
