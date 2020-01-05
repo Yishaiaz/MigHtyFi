@@ -21,7 +21,8 @@ class MainApplication(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.geometry(FRAMESIZE)
-        self.iconbitmap('{0}/equalizer1.ico'.format(STYLEFILESFOLDER))
+        # self.iconbitmap('{0}/equalizer1.ico'.format(STYLEFILESFOLDER))
+        self.iconbitmap('{0}/equalizer.ico'.format(STYLEFILESFOLDER))
 
         tk.Tk.iconbitmap(self)
         tk.Tk.wm_title(self, "MigHtyFi")
