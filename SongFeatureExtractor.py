@@ -21,11 +21,10 @@ def song_processing(audio_file_path, song_name, artist_name):
     return {'features': features, 'y': y, 'youtube_title': youtube_title, 'lyrics': lyrics}
 
 
-file_path = 'C:\\Dan\\UNI\\Jarta.Projects\\MigHtyFi\\data\\2015\\01. Mark Ronson - Uptown Funk[www.musicbolt.com].mp3'
-song_name = 'Uptown Funk'
-artist = 'Mark Ronson'
-
 if __name__ == '__main__':
+    file_path = 'C:\\Dan\\UNI\\Jarta.Projects\\MigHtyFi\\data\\2015\\01. Mark Ronson - Uptown Funk[www.musicbolt.com].mp3'
+    song_name = 'Uptown Funk'
+    artist = 'Mark Ronson'
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         print(song_processing(file_path, song_name, artist))

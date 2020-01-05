@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import tkinter as tk
+from tkinter import *
 from time import sleep
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
@@ -9,7 +10,9 @@ from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import AudioFeatureExtractor
 from PredictionModule import DataPreprocessor, PredictionModule
+from SongFeatureExtractor import song_processing
 from FileSimpleAnalyse import FileSimpleAnalyse as fsa
+import warnings
 
 LARGE_FONT = ("Verdana", 20)
 FRAMESIZE = "850x500"
@@ -63,7 +66,7 @@ class EntryPage(tk.Frame):
         button_to_home_page = ttk.Button(self, text="Go To Song Analyzer", command=lambda: self.controller.show_frame(SongAnalyserPage))
         button_to_home_page.grid(row=3, column=1)
         button_to_about_page = ttk.Button(self, text="About",
-                                          command=lambda: self.controller.show_frame(AboutPage))
+                                          command=lambda: self.controller.show_frame(PageOne))
         button_to_about_page.grid(row=3, column=0)
 
         # button_to_home_page = ttk.Button(self, text="About",
@@ -164,21 +167,55 @@ class PageOne(tk.Frame):
         print("hello {0}".format(self.content.get()))
 
     def __init__(self, parent, controller):
-        self.content = tk.StringVar()
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Insert your song name", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
 
-        song_name_entry = ttk.Entry(self, textvariable=self.content)
-        song_name_entry.pack()
 
-        button1 = ttk.Button(self, text="Get song Youtube Data")
-        button1.bind("<Button-1>", self.get_song_name)
-        button1.pack()
+        Label(self, text='Song Path').grid(row=0)
+        Label(self, text='Song Name').grid(row=1)
+        Label(self, text='Artist name').grid(row=2)
 
-        button2 = ttk.Button(self, text="Home Page",
-                             command=lambda: controller.show_frame(EntryPage))
-        button2.pack()
+        self.entry_song_path = Entry(self)
+        self.entry_song_name = Entry(self)
+        self.entry_artist_name = Entry(self)
+
+        self.entry_song_path.grid(row=0, column=1)
+        self.entry_song_name.grid(row=1, column=1)
+        self.entry_artist_name.grid(row=2, column=1)
+
+        b1 = Button(self, text='Browse Song File', command=self.browse_button)
+        b1.grid(row=0, column=2, sticky=W, pady=4)
+
+        b2 = Button(self, text='Predict', command=self.get_feature)
+        b2.grid(row=3, column=0, sticky=W, pady=4)
+
+        # b2 = Button(master, text='Browse', command=lambda: browse_button('MODEL')).grid(row=1, column=2, sticky=W,
+        #                                                                                 pady=4)
+        # b3 = Button(master, text='Predict', command=predict).grid(row=2, column=1, sticky=W, pady=4)
+
+        # button1 = ttk.Button(self, text="Load File", command=self.open_file_clicked,textvariable=self.path)
+        # # button1.bind("<Button-1>", self.open_file_clicked
+        # button1.pack()
+        #
+        # button2 = ttk.Button(self, text="Predict Song",
+        #                      command=self.get_feature(e1, e2.get()))
+        # button2.pack()
+
+    def browse_button(self):
+        self.entry_song_path.delete(0, END)
+        self.entry_song_path.insert(0, askopenfilename(initialdir=os.path.join( os.environ['HOMEPATH'], 'Desktop'), title='Select File'))
+
+    # def open_file_clicked(self):
+    #     print('entered')
+    #     name = askopenfilename(initialdir="C:/Users/Batman/Documents/Programming/tkinter/",
+    #                            filetypes=(("m4a file", ".m4a"), ("mp3 file", ".mp3"), ("Wave File", ".wav"), ("All Files", ".*")),
+    #                            title="Choose a file."
+    #                            )
+    #     self.file_path = name
+
+
+    def get_feature(self):
+        song_dict = song_processing(self.entry_song_path.get(), self.entry_song_name.get(), self.entry_artist_name.get())
+        print(song_dict)
 
 
 
@@ -188,6 +225,8 @@ class PageOne(tk.Frame):
 #     background=[('pressed', '!disabled', 'black'), ('active', 'white')]
 #     )
 
-
-app = MainApplication()
-app.mainloop()
+if __name__ == '__main__':
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        app = MainApplication()
+        app.mainloop()
