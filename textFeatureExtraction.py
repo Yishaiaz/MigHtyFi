@@ -3,10 +3,26 @@ from nltk.corpus import stopwords
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import nltk
-nltk.download('stopwords')
-nltk.download('punkt')
+# nltk.download('stopwords')
+# nltk.download('punkt')
 from profanity_check import predict, predict_prob
 from spellchecker.spellchecker import SpellChecker
+import os
+import warnings
+
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    warnings.filterwarnings('ignore')
+    for path in nltk.data.path:
+        try:
+            if 'corpora' in os.listdir(path):
+                if 'stopwords' in os.listdir(os.path.join(path, 'corpora')):
+                    break
+                else:
+                    nltk.download('stopwords')
+                    nltk.download('punkt')
+        except Exception as e:
+            print('', end='')
 
 
 class TextFeatureExtractor:
