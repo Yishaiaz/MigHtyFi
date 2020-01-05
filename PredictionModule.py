@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 import sklearn.model_selection as model_selection
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 
 class KnearNeighborsPrediction:
     def __init__(self, **kwargs):
@@ -146,14 +146,14 @@ class DataPreprocessor:
 
 # Example for Data Processor
 dp = DataPreprocessor()
-pm = PredictionModule()
+pm = PredictionModule(hidden_layer_sizes=(17, 10, 8), solver='adam', activation_func='tanh')
 
 #
 PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/ExtractedData/data_no_name.csv"
 #
 data_frame = pd.read_csv(PATH_TO_FILE)
 data_frame.fillna(data_frame.median(), inplace=True)
-bins = [0, 100000, 500000,1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
+bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
 labels = [x for x in bins][:-1]
 X = data_frame.iloc[:, 1:-1].values
 y = pd.cut(data_frame.iloc[:, 5], bins, labels=labels)
