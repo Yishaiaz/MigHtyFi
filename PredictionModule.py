@@ -5,14 +5,22 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 import sklearn.model_selection as model_selection
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, KBinsDiscretizer
 
 
-class KnearNeighborsPrediction:
+class KNearNeighborsPrediction:
     """
-
+    the prediction model of choice.
+    this class wraps KNeighborsClassifier from sklearn to MightyFi specific needs.
     """
     def __init__(self, **kwargs):
+        """
+        if you wish to train the model separately, pass kwarg 'train_model=False'.
+        if you wish to change the model n_neighbors parameter, pass kwag 'n_neighbors=YOUR NUM'
+
+        if no arguments were passed the model will be for n_neighbors=20, and will train upon initiation.
+        :param kwargs: train_model, n_neighbors
+        """
         self.was_trained = False
         self.feature_number = 14
         if kwargs.get('train_model') is not None:
@@ -31,18 +39,35 @@ class KnearNeighborsPrediction:
             # our y axis discretization
             bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
             labels = ["{0}-{1}".format(bins[i], bins[i + 1]) for i in range(len(bins) - 1)]
-            self.X = dataset.iloc[:, 1:-1].values
-            y = pd.cut(dataset.iloc[:, self.feature_number ], bins, labels=labels)
+            self.X = dataset.iloc[:, :-1].values
+            y = pd.cut(dataset.iloc[:, -1], bins, labels=labels)
+            # rescale the data
+            self.scaler = StandardScaler()
+            self.scaler.fit(self.X)
+
             # train the model with the entire dataset
+            X_train = self.scaler.transform(self.X)
             self.train(self.X, y)
 
     def train(self, X_train, y_train):
+        """
+        uses the sklearn model fit() method, marks the model as trained via inner attribute.
+        :param X_train:
+        :param y_train:
+        :return:
+        """
         self.classifier.fit(X_train, y_train)
         self.was_trained = True
 
     def predict(self, X_test):
+        """
+        returns the predicted label.
+        :raises an exception if the model wasn't trained before hand.
+        :param X_test:
+        :return:
+        """
         if self.was_trained:
-            return self.classifier.predict(X_test[:self.feature_number])
+            return self.classifier.predict(self.scaler.transform(X_test))
         else:
             raise Exception("The model was not trained!")
 
@@ -50,8 +75,6 @@ class KnearNeighborsPrediction:
 class PredictionModule:
     """
     wraps DNN's and other regression modules
-
-
         other regressors you can use
         sklearn.neighbors.KNeighborsRegressor(n_neighbors=5, weights='uniform', algorithm='auto', leaf_size=30, p=2, metric='minkowski', metric_params=None, n_jobs=None,
     """
@@ -167,24 +190,23 @@ class DataPreprocessor:
         return X_train, X_test, y_train, y_test
 
 
-# class KnnDataProcessor():
 
-# Example for Data Processor
-if __name__ == '__main__':
-    dp = DataPreprocessor()
-    pm = PredictionModule(hidden_layer_sizes=(17, 10, 8), solver='adam', activation_func='tanh')
-
-    #
-    PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/ExtractedData/data_no_name.csv"
-    #
-    data_frame = pd.read_csv(PATH_TO_FILE)
-    data_frame.fillna(data_frame.median(), inplace=True)
-    bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
-    labels = [x for x in bins][:-1]
-    X = data_frame.iloc[:, 1:-1].values
-    y = pd.cut(data_frame.iloc[:, 5], bins, labels=labels)
-    # X_train, X_test, y_train, y_test = dp.pre_proceesing_regression()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
-    pm.fit_model(X_train, y_train)
-    prediction_vector = pm.predict_model(X_test)
-    print(prediction_vector[prediction_vector==y_test])
+# # Example for Data Processor
+# if __name__ == '__main__':
+#     dp = DataPreprocessor()
+#     pm = PredictionModule(hidden_layer_sizes=(17, 10, 8), solver='adam', activation_func='tanh')
+#
+#     #
+#     PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/ExtractedData/data_no_name.csv"
+#     #
+#     data_frame = pd.read_csv(PATH_TO_FILE)
+#     data_frame.fillna(data_frame.median(), inplace=True)
+#     bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
+#     labels = [x for x in bins][:-1]
+#     X = data_frame.iloc[:, 1:-1].values
+#     y = pd.cut(data_frame.iloc[:, 5], bins, labels=labels)
+#     # X_train, X_test, y_train, y_test = dp.pre_proceesing_regression()
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+#     pm.fit_model(X_train, y_train)
+#     prediction_vector = pm.predict_model(X_test)
+#     print(prediction_vector[prediction_vector==y_test])
