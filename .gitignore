@@ -1,6 +1,9 @@
 data
 *.idea
+*.iml
 *.csv
 *.json
+.idea
+.iml
 __pycache__
 
