@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 import sklearn.model_selection as model_selection
 from sklearn.neighbors import KNeighborsClassifier
-# from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split
 
 class KnearNeighborsPrediction:
     def __init__(self, **kwargs):
@@ -145,20 +145,21 @@ class DataPreprocessor:
 # class KnnDataProcessor():
 
 # Example for Data Processor
-dp = DataPreprocessor()
-pm = PredictionModule(hidden_layer_sizes=(17, 10, 8), solver='adam', activation_func='tanh')
+if __name__ == '__main__':
+    dp = DataPreprocessor()
+    pm = PredictionModule(hidden_layer_sizes=(17, 10, 8), solver='adam', activation_func='tanh')
 
-#
-PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/ExtractedData/data_no_name.csv"
-#
-data_frame = pd.read_csv(PATH_TO_FILE)
-data_frame.fillna(data_frame.median(), inplace=True)
-bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
-labels = [x for x in bins][:-1]
-X = data_frame.iloc[:, 1:-1].values
-y = pd.cut(data_frame.iloc[:, 5], bins, labels=labels)
-# X_train, X_test, y_train, y_test = dp.pre_proceesing_regression()
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
-pm.fit_model(X_train, y_train)
-prediction_vector = pm.predict_model(X_test)
-print(prediction_vector[prediction_vector==y_test])
+    #
+    PATH_TO_FILE = "/Users/yishaiazabary/PycharmProjects/MigHtyFi/ExtractedData/data_no_name.csv"
+    #
+    data_frame = pd.read_csv(PATH_TO_FILE)
+    data_frame.fillna(data_frame.median(), inplace=True)
+    bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
+    labels = [x for x in bins][:-1]
+    X = data_frame.iloc[:, 1:-1].values
+    y = pd.cut(data_frame.iloc[:, 5], bins, labels=labels)
+    # X_train, X_test, y_train, y_test = dp.pre_proceesing_regression()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
+    pm.fit_model(X_train, y_train)
+    prediction_vector = pm.predict_model(X_test)
+    print(prediction_vector[prediction_vector==y_test])
