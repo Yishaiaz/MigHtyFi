@@ -2,16 +2,18 @@
 from nltk.corpus import stopwords
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-# import nltk
-# nltk.download('stopwords')
-# nltk.download('punkt')
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 from profanity_check import predict, predict_prob
 from spellchecker.spellchecker import SpellChecker
 
 
 class TextFeatureExtractor:
-
-
+    '''
+    extracts fourb text features from a given text.
+    features: [most Freq, repetitive, offensive, spellScheck]
+    '''
     def not_number(self,word):
         '''
         checks if there is a number in the string

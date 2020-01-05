@@ -5,23 +5,41 @@ import librosa.display
 import copy
 import os
 import warnings
+warnings.filterwarnings('ignore')
 
 
 class AudioFeatureExtractor:
+    """
+    Extract features from all the audio files in a given directory
+    """
     def __new__(cls, dir_path, *args, **kwargs):
+        """
+        check if the directory is a valid path, else not creating the instance
+        :param dir_path: the given directory path
+        :return: an instance of this class iff the given directory path is a valid directory path
+        :raise: ValueError if the given directory path is not a valid path
+        """
         instance = super(AudioFeatureExtractor, cls).__new__(cls)
         if not os.path.isdir(dir_path):
             raise ValueError('{} is not a directory path'.format(dir_path))
         return instance
 
     def __init__(self, dir_path):
+        """
+        initializing the instance
+        :param dir_path: the path to the given directory where all the audio files are
+        """
         self.dir_path = dir_path
         self.file_types = ['mp3', 'wav']
         self.file_names = [f for f in os.listdir(dir_path) if self.insert_to_files(f)]
-        self.__features = {'tempo': [], 'first_beat': [], 'max_volume(dB)': [],
-                           'volume_sd(dB)': [], 'max_volume(PW)': [], 'volume_sd(PW)': [], 'zero_crossing': [],
-                           'zcr': [], 'mean_fit_coefficient0': [], 'mean_fit_coefficient1': [],
-                           'mean_fit_coefficient2': [], 'mean_flatness': [], 'mean_harmonic_flatness': []}
+        # self.__features = {'tempo': [], 'first_beat': [], 'max_volume(dB)': [],
+        #                    'volume_sd(dB)': [], 'max_volume(PW)': [], 'volume_sd(PW)': [], 'zero_crossing': [],
+        #                    'zcr': [], 'mean_fit_coefficient0': [], 'mean_fit_coefficient1': [],
+        #                    'mean_fit_coefficient2': [], 'mean_flatness': [], 'mean_harmonic_flatness': []}
+
+        self.__features = {'tempo': [], 'first_beat': [], 'max_volume(PW)': [], 'volume_sd(PW)': [], 'zcr': [],
+                           'mean_fit_coefficient0': [], 'mean_fit_coefficient1': [], 'mean_fit_coefficient2': [],
+                           'mean_flatness': [], 'mean_harmonic_flatness': []}
 
     def insert_to_files(self, file_path):
         """
@@ -33,7 +51,7 @@ class AudioFeatureExtractor:
 
     def __repr__(self):
         data = pd.DataFrame(self.__features)
-        return data.reindex(data['song'])
+        return str(data.reindex(data['song']))
 
     def extract_features(self):
         """
@@ -72,9 +90,9 @@ class AudioFeatureExtractor:
         """
         fmin = librosa.note_to_hz('A1')
         c = np.abs(librosa.cqt(y, sr=sr, fmin=fmin))
-        amplitude_to_decibels = librosa.amplitude_to_db(c, ref=np.max)
-        self.__features['max_volume(dB)'].append(np.max(amplitude_to_decibels))
-        self.__features['volume_sd(dB)'].append(np.std(amplitude_to_decibels))
+        # amplitude_to_decibels = librosa.amplitude_to_db(c, ref=np.max)
+        # self.__features['max_volume(dB)'].append(np.max(amplitude_to_decibels))
+        # self.__features['volume_sd(dB)'].append(np.std(amplitude_to_decibels))
 
         freqs = librosa.cqt_frequencies(c.shape[0], fmin=fmin)
         perceptual_cqt = librosa.perceptual_weighting(c**2, freqs, ref=np.max)
@@ -88,8 +106,8 @@ class AudioFeatureExtractor:
         """
         zcr = librosa.feature.zero_crossing_rate(y, frame_length=y.shape[0],
                                                  hop_length=y.shape[0] + 1)
-        zc = np.nonzero(librosa.zero_crossings(y))[0]
-        self.__features['zero_crossing'].append(len(zc))
+        # zc = np.nonzero(librosa.zero_crossings(y))[0]
+        # self.__features['zero_crossing'].append(len(zc))
         self.__features['zcr'].append(zcr[0][0])
 
     def __poly_features(self, y):
@@ -117,7 +135,15 @@ class AudioFeatureExtractor:
 
 
 class SingleAudioFeatureExtractor:
+    """
+    Extract features from a single audio file
+    """
     def __new__(cls, song_path, *args, **kwargs):
+        """
+        check if the given song path is a valid path, else not creating the instance
+        :param song_path: the given song path
+        :return: an instance of this class iff the given song path is a valid audio file path, else return None
+        """
         try:
             instance = super(SingleAudioFeatureExtractor, cls).__new__(cls)
             instance.__audio_time_series, instance.__sampling_rate = librosa.load(song_path)
@@ -126,6 +152,10 @@ class SingleAudioFeatureExtractor:
             return None
 
     def __init__(self, song_path):
+        """
+        initialize the instance
+        :param song_path:
+        """
         self.__audio_path = song_path
         self.__hop_length = 512
         self.__features = {}
@@ -168,8 +198,7 @@ class SingleAudioFeatureExtractor:
         """
         extracting all features from given song
         :return: a NumpyArray with the values of the features by this order:
-                    [tempo, first beat, max_volume(amplitude to dB), volume_sd(amplitude to dB),
-                    max_volume(perceptual weighting), volume_sd(perceptual weighting), zero_crossing, zcr,
+                    [tempo, first beat, max_volume(perceptual weighting), volume_sd(perceptual weighting), zcr,
                     mean_fit_coefficient(const), mean_fit_coefficient(linear), mean_fit_coefficient(quadratic),
                     mean_flatness, mean_harmonic_flatness]
         """
@@ -182,7 +211,7 @@ class SingleAudioFeatureExtractor:
 
     def __beat_features(self):
         """
-        add the beat features to the features list
+        add the beat features to the features dict
         """
         y_harmonic, y_percussive = librosa.effects.hpss(self.__audio_time_series)
         self.__harmonic_time_series = y_harmonic
@@ -192,28 +221,37 @@ class SingleAudioFeatureExtractor:
         self.__features['first_beat'] = beat_times[0]
 
     def __volume_features(self):
+        """
+        add the volume features to the features dict
+        """
         fmin = librosa.note_to_hz('A1')
         c = np.abs(librosa.cqt(self.__audio_time_series, sr=self.__sampling_rate, fmin=fmin))
-        amplitude_to_decibels = librosa.amplitude_to_db(c, ref=np.max)
-        max_volume_decibels = np.max(amplitude_to_decibels)
-        self.__features['max_volume(dB)'] = max_volume_decibels
-        volume_sd_decibels = np.std(amplitude_to_decibels)
-        self.__features['volume_sd(dB)'] = volume_sd_decibels
+        # amplitude_to_decibels = librosa.amplitude_to_db(c, ref=np.max)
+        # max_volume_decibels = np.max(amplitude_to_decibels)
+        # self.__features['max_volume(dB)'] = max_volume_decibels
+        # volume_sd_decibels = np.std(amplitude_to_decibels)
+        # self.__features['volume_sd(dB)'] = volume_sd_decibels
         freqs = librosa.cqt_frequencies(c.shape[0], fmin=fmin)
         perceptual_cqt = librosa.perceptual_weighting(c**2, freqs, ref=np.max)
-        max_volume_pw = np.max(perceptual_cqt)
-        self.__features['max_volume(PW)'] = max_volume_pw
-        volume_sd_pw = np.std(perceptual_cqt)
-        self.__features['volume_sd(PW)'] = volume_sd_pw
+        # max_volume_pw = np.max(perceptual_cqt)
+        self.__features['max_volume(PW)'] = np.max(perceptual_cqt)
+        # volume_sd_pw = np.std(perceptual_cqt)
+        self.__features['volume_sd(PW)'] = np.std(perceptual_cqt)
 
     def __zcr(self):
+        """
+        add the zero crossing rate to the features dict
+        """
         zcr = librosa.feature.zero_crossing_rate(self.__audio_time_series, frame_length=self.__audio_time_series.shape[0],
                                                  hop_length=self.__audio_time_series.shape[0] + 1)
-        zc = np.nonzero(librosa.zero_crossings(self.__audio_time_series))[0]
-        self.__features['zero_crossing'] = len(zc)
+        # zc = np.nonzero(librosa.zero_crossings(self.__audio_time_series))[0]
+        # self.__features['zero_crossing'] = len(zc)
         self.__features['zcr'] = zcr[0][0]
 
     def __poly_features(self):
+        """
+        add the polynomial fitting coefficients to the features dict
+        """
         s = np.abs(librosa.stft(self.__audio_time_series))
         p2 = librosa.feature.poly_features(S=s, order=2)
         self.__features['mean_fit_coefficient0'] = np.mean(p2[2])
@@ -221,39 +259,42 @@ class SingleAudioFeatureExtractor:
         self.__features['mean_fit_coefficient2'] = np.mean(p2[0])
 
     def __flatness(self):
+        """
+        add the flatness features to features dict
+        """
         flatness = librosa.feature.spectral_flatness(self.__audio_time_series)
         harmonic_flatness = librosa.feature.spectral_flatness(self.__harmonic_time_series)
         self.__features['mean_flatness'] = np.mean(flatness)
         self.__features['mean_harmonic_flatness'] = np.mean(harmonic_flatness)
 
 
-wav = '.wav'
-mp3 = '.mp3'
+# wav = '.wav'
+# mp3 = '.mp3'
 
 
-def test_multi_audio():
-    global wav, mp3
-    temp_dir_path = '{0}{1}data'.format(os.getcwd(), os.sep)
-    afe = AudioFeatureExtractor(temp_dir_path)
-    df = afe.extract_features()
-    print(df)
-    print(afe)
+# def test_multi_audio():
+#     global wav, mp3
+#     temp_dir_path = '{0}{1}data'.format(os.getcwd(), os.sep)
+#     afe = AudioFeatureExtractor(temp_dir_path)
+#     df = afe.extract_features()
+#     print(df)
+#     print(afe)
 
 
-def test_single_audio():
-    global wav, mp3
-    # temp_song_path = '{0}{1}data{1}2015{1}00{2}'.format(os.getcwd(), os.sep, mp3)  ## Ed Sheeran
-    temp_song_path = '{0}{1}data{1}C{2}'.format(os.getcwd(), os.sep, wav) ## Do Re Mi...
+# def test_single_audio():
+#     global wav, mp3
+#     temp_song_path = '{0}{1}data{1}2015{1}00{2}'.format(os.getcwd(), os.sep, mp3)  ## Ed Sheeran
+    # temp_song_path = '{0}{1}data{1}C{2}'.format(os.getcwd(), os.sep, wav) ## Do Re Mi...
     # temp_song_path = '{0}{1}data{1}4Chords_A{2}'.format(os.getcwd(), os.sep, wav) ## Four chords song in A
+    #
+    # fe = SingleAudioFeatureExtractor(temp_song_path)
+    # fe.extract_features()
+    # names = list(fe.get_feature_dict().keys())
+    # print('\n'.join(names))
 
-    fe = SingleAudioFeatureExtractor(temp_song_path)
-    fe.extract_features()
-    names = list(fe.get_feature_dict().keys())
-    print('\n'.join(names))
 
-
-if __name__ == '__main__':
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        # test_single_audio()
-        test_multi_audio()
+# if __name__ == '__main__':
+#     with warnings.catch_warnings():
+#         warnings.simplefilter('ignore')
+#         test_single_audio()
+#         test_multi_audio()
