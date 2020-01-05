@@ -9,7 +9,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import matplotlib.pyplot as plt
 import AudioFeatureExtractor
-from PredictionModule import DataPreprocessor, PredictionModule
+from PredictionModule import DataPreprocessor, PredictionModule, KnearNeighborsPrediction
 from SongFeatureExtractor import song_processing
 from FileSimpleAnalyse import FileSimpleAnalyse as fsa
 import warnings
@@ -63,10 +63,10 @@ class EntryPage(tk.Frame):
         photo_label = ttk.Label(self, image=main_photo)
         label.image = main_photo
         photo_label.grid(row=1, column=0, columnspan=2)
-        button_to_home_page = ttk.Button(self, text="Go To Song Analyzer", command=lambda: self.controller.show_frame(SongAnalyserPage))
+        button_to_home_page = ttk.Button(self, text="Go To Song Analyzer", command=lambda: self.controller.show_frame(PageOne))
         button_to_home_page.grid(row=3, column=1)
         button_to_about_page = ttk.Button(self, text="About",
-                                          command=lambda: self.controller.show_frame(PageOne))
+                                          command=lambda: self.controller.show_frame(AboutPage))
         button_to_about_page.grid(row=3, column=0)
 
         # button_to_home_page = ttk.Button(self, text="About",
@@ -161,14 +161,11 @@ class AboutPage(tk.Frame):
 
 
 class PageOne(tk.Frame):
+    """
 
-    def get_song_name(self, entry):
-        # todo: here activate the crawler.
-        print("hello {0}".format(self.content.get()))
-
+    """
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
 
         Label(self, text='Song Path').grid(row=0)
         Label(self, text='Song Name').grid(row=1)
@@ -185,37 +182,59 @@ class PageOne(tk.Frame):
         b1 = Button(self, text='Browse Song File', command=self.browse_button)
         b1.grid(row=0, column=2, sticky=W, pady=4)
 
-        b2 = Button(self, text='Predict', command=self.get_feature)
+        b2 = Button(self, text='Predict', command=self.predict_song_success)
         b2.grid(row=3, column=0, sticky=W, pady=4)
 
-        # b2 = Button(master, text='Browse', command=lambda: browse_button('MODEL')).grid(row=1, column=2, sticky=W,
-        #                                                                                 pady=4)
-        # b3 = Button(master, text='Predict', command=predict).grid(row=2, column=1, sticky=W, pady=4)
+        self.lyrics_text = tk.Text(self, width=20, height=20)
+        self.lyrics_text.insert('1.0', "Song Lyrics:\n")
+        self.lyrics_text.config(state=DISABLED)
+        self.lyrics_text.grid(row=4, column=0, columnspan=3)
+        self.true_y_of_song_textbox = tk.Text(self, width=30, height=5, state=DISABLED)
+        self.true_y_of_song_textbox.grid(row=5, column=0, columnspan=3)
 
-        # button1 = ttk.Button(self, text="Load File", command=self.open_file_clicked,textvariable=self.path)
-        # # button1.bind("<Button-1>", self.open_file_clicked
-        # button1.pack()
-        #
-        # button2 = ttk.Button(self, text="Predict Song",
-        #                      command=self.get_feature(e1, e2.get()))
-        # button2.pack()
+        b2 = Button(self, text='Back Home', command=lambda: controller.show_frame(EntryPage))
+        b2.grid(row=6, column=0, columnspan=3)
 
     def browse_button(self):
         self.entry_song_path.delete(0, END)
         self.entry_song_path.insert(0, askopenfilename(initialdir='/', title='Select File'))
 
-    # def open_file_clicked(self):
-    #     print('entered')
-    #     name = askopenfilename(initialdir="C:/Users/Batman/Documents/Programming/tkinter/",
-    #                            filetypes=(("m4a file", ".m4a"), ("mp3 file", ".mp3"), ("Wave File", ".wav"), ("All Files", ".*")),
-    #                            title="Choose a file."
-    #                            )
-    #     self.file_path = name
+    def predict_song_success(self):
+        #todo: input checks
+        messagebox.showinfo("Please wait...", "Analyzing song {0}".format(self.entry_song_name.get()))
+        song_dict = self.get_feature()
+        print(song_dict)
+        self.lyrics_text.config(state=NORMAL)
+        if song_dict is not None:
+            if song_dict['lyrics'] is not None:
+                self.lyrics_text.insert('2.0', song_dict['lyrics'])
+            else:
+                self.lyrics_text.insert('2.0', "Sorry, no lyrics were found :-( ")
 
+            self.true_y_of_song_textbox.config(state=NORMAL)
+            self.true_y_of_song_textbox.insert('1.0', "True Y: {0}".format(song_dict['y']))
+            X_test = song_dict['features']
+            if X_test[-1] is None:
+                # fill with median values
+                X_test[len(X_test)-4:] = [0.080717489, 0.03125, 0.429372, 0.9359]
+
+            messagebox.showinfo("Please wait...", "Now predicting song success!")
+        else:
+            messagebox.showinfo("oh no", "Something went wrong!")
+
+        # disabling the text boxes to read only
+        self.true_y_of_song_textbox.config(state=DISABLED)
+        self.lyrics_text.config(state=DISABLED)
+
+        try:
+            classifier = KnearNeighborsPrediction()
+            print(classifier.predict(X_test))
+        except Exception as e:
+            messagebox.showinfo("Something went wrong", e)
 
     def get_feature(self):
-        song_dict = song_processing(self.entry_song_path.get(), self.entry_song_name.get(), self.entry_artist_name.get())
-        print(song_dict)
+        return song_processing(self.entry_song_path.get(), self.entry_song_name.get(), self.entry_artist_name.get())
+
 
 
 

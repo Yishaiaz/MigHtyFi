@@ -7,19 +7,44 @@ import sklearn.model_selection as model_selection
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
+
 class KnearNeighborsPrediction:
+    """
+
+    """
     def __init__(self, **kwargs):
+        self.was_trained = False
+        self.feature_number = 14
+        if kwargs.get('train_model') is not None:
+            train_model = kwargs.get('train_model')
+        else:
+            train_model = True
         if kwargs.get('n_neighbors') is not None:
             self.n_neighbors = kwargs.get('n_neighbors')
         else:
-            self.n_neighbors = None
+            self.n_neighbors = 20
         self.classifier = KNeighborsClassifier(n_neighbors=self.n_neighbors)
+        if train_model:
+            dataset = pd.read_csv("ExtractedData/compressed_data_no_name.csv")
+            # PRE PROCESSING
+            dataset.fillna(dataset.median(), inplace=True)
+            # our y axis discretization
+            bins = [0, 100000, 500000, 1000000, 100000000, 250000000, 500000000, 1000000000, 10000000000]
+            labels = ["{0}-{1}".format(bins[i], bins[i + 1]) for i in range(len(bins) - 1)]
+            self.X = dataset.iloc[:, 1:-1].values
+            y = pd.cut(dataset.iloc[:, self.feature_number ], bins, labels=labels)
+            # train the model with the entire dataset
+            self.train(self.X, y)
 
     def train(self, X_train, y_train):
         self.classifier.fit(X_train, y_train)
+        self.was_trained = True
 
     def predict(self, X_test):
-        self.classifier.predict(X_test)
+        if self.was_trained:
+            return self.classifier.predict(X_test[:self.feature_number])
+        else:
+            raise Exception("The model was not trained!")
 
 
 class PredictionModule:

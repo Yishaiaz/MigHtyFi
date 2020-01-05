@@ -6,7 +6,8 @@ from nltk.tokenize import word_tokenize
 # nltk.download('stopwords')
 # nltk.download('punkt')
 from profanity_check import predict, predict_prob
-from spellchecker import SpellChecker
+from spellchecker.spellchecker import SpellChecker
+
 
 class TextFeatureExtractor:
 
