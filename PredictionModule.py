@@ -46,7 +46,7 @@ class KNearNeighborsPrediction:
             self.scaler.fit(self.X)
 
             # train the model with the entire dataset
-            X_train = self.scaler.transform(self.X)
+            self.X = self.scaler.transform(self.X)
             self.train(self.X, y)
 
     def train(self, X_train, y_train):
