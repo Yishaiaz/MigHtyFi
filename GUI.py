@@ -136,8 +136,24 @@ class SongAnalyzer(tk.Frame):
         # making the true y axis result text box read only
         self.predicted_y_of_song_textbox.config(state=DISABLED)
 
-        b2 = Button(self, text='Back Home', command=lambda: controller.show_frame(EntryPage))
+        self.back_home = lambda: controller.show_frame(EntryPage)
+        b2 = Button(self, text='Back Home', command=self.clean_and_back_home())
         b2.grid(row=7, column=0, columnspan=3)
+
+    def clean_and_back_home(self):
+        self.entry_song_path.delete(0, END)
+        self.entry_song_name.delete(0, END)
+        self.entry_artist_name.delete(0, END)
+        self.lyrics_text.config(state=NORMAL)
+        self.lyrics_text.delete('2.0', END)
+        self.lyrics_text.config(state=DISABLED)
+        self.true_y_of_song_textbox.config(state=NORMAL)
+        self.true_y_of_song_textbox.delete('1.0', END)
+        self.true_y_of_song_textbox.config(state=DISABLED)
+        self.predicted_y_of_song_textbox.config(state=NORMAL)
+        self.predicted_y_of_song_textbox.delete('1.0', END)
+        self.predicted_y_of_song_textbox.config(state=DISABLED)
+        self.back_home()
 
     def browse_button(self):
         """
