@@ -11,7 +11,7 @@ import warnings
 
 # the apps tkinter main Style attribute
 LARGE_FONT = ("Verdana", 20)
-FRAMESIZE = "850x500"
+FRAMESIZE = "1000x700"
 STYLEFILESFOLDER = "StyleFiles"
 
 
@@ -100,7 +100,7 @@ class SongAnalyzer(tk.Frame):
     this class uses messageboxes to alert the user to scenarios.
     """
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg="#211F1E")
 
         Label(self, text='Song Path').grid(row=0)
         Label(self, text='Song Name').grid(row=1)
@@ -117,28 +117,30 @@ class SongAnalyzer(tk.Frame):
         b1 = Button(self, text='Browse Song File', command=self.browse_button)
         b1.grid(row=0, column=2, sticky=W, pady=4)
 
-        b2 = Button(self, text='Predict', command=self.predict_song_success)
-        b2.grid(row=3, column=0, sticky=W, pady=4)
-
         self.lyrics_text = tk.Text(self, width=40, height=20)
         self.lyrics_text.insert('1.0', "Song Lyrics:\n")
         # making the lyrics text box read only
         self.lyrics_text.config(state=DISABLED)
-        self.lyrics_text.grid(row=4, column=0, columnspan=3)
+        self.lyrics_text.grid(row=3, column=0, columnspan=3)
+
+        Label(self, text='\t'*4, bg='#211F1E').grid(row=3, column=4)
+
+        b2 = Button(self, text='Predict', command=self.predict_song_success, bg='#11ba25', font=('calibri', 32), fg='white')
+        b2.grid(row=3, column=5, sticky=W, pady=4)
 
         self.true_y_of_song_textbox = tk.Text(self, width=40, height=5, state=DISABLED)
-        self.true_y_of_song_textbox.grid(row=5, column=0, columnspan=3)
+        self.true_y_of_song_textbox.grid(row=4, column=0, columnspan=3)
         # making the true y axis result text box read only
         self.true_y_of_song_textbox.config(state=DISABLED)
 
         self.predicted_y_of_song_textbox = tk.Text(self, width=40, height=5, state=DISABLED)
-        self.predicted_y_of_song_textbox.grid(row=6, column=0, columnspan=3)
+        self.predicted_y_of_song_textbox.grid(row=5, column=0, columnspan=3)
         # making the true y axis result text box read only
         self.predicted_y_of_song_textbox.config(state=DISABLED)
 
         self.back_home = lambda: controller.show_frame(EntryPage)
-        b2 = Button(self, text='Back Home', command=self.clean_and_back_home())
-        b2.grid(row=7, column=0, columnspan=3)
+        b2 = Button(self, text='Back Home', command=self.clean_and_back_home)
+        b2.grid(row=6, column=0, columnspan=3)
 
     def clean_and_back_home(self):
         self.entry_song_path.delete(0, END)
