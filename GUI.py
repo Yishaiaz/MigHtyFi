@@ -176,6 +176,15 @@ class SongAnalyzer(tk.Frame):
         it shows the user the prediction in a text box under the true Y extracted from Youtube.
         :return:
         """
+        self.lyrics_text.config(state=NORMAL)
+        self.lyrics_text.delete('2.0', END)
+        self.lyrics_text.config(state=DISABLED)
+        self.true_y_of_song_textbox.config(state=NORMAL)
+        self.true_y_of_song_textbox.delete('1.0', END)
+        self.true_y_of_song_textbox.config(state=DISABLED)
+        self.predicted_y_of_song_textbox.config(state=NORMAL)
+        self.predicted_y_of_song_textbox.delete('1.0', END)
+        self.predicted_y_of_song_textbox.config(state=DISABLED)
         if self.entry_song_path.get() == "" or self.entry_artist_name.get() == "" or self.entry_song_name.get() == "":
             messagebox.showinfo("Wrong input", "All input must be filled!")
             return
