@@ -66,6 +66,7 @@ class KNearNeighborsPrediction:
         :param X_test:
         :return:
         """
+        X_test = self.scaler.transform(X_test)
         if self.was_trained:
             return self.classifier.predict(self.scaler.transform(X_test))
         else:
